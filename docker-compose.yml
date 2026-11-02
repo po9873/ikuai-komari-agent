@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  ikuai-komari-agent:
+    build: .
+    # 发布后改为: image: <你的DockerHub用户名>/ikuai-komari-agent:latest
+    image: ikuai-komari-agent:local
+    container_name: ikuai-komari-agent
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      # ---- iKuai 路由器 ----
+      - IKUAI_URL=https://192.168.1.1
+      # 方式一（推荐，iKuai 4.0.222+）：个人 API 令牌，免账号密码
+      - IKUAI_API_TOKEN=粘贴你的令牌
+      # 方式二：账号密码（iKuai 3.x），设置后若未提供 Token 则使用此方式
+      # - IKUAI_USERNAME=komari
+      # - IKUAI_PASSWORD=change-me
+      - IKUAI_VERIFY_SSL=false        # 爱快用自签名证书时保持 false
+      - IKUAI_TIMEOUT=10
+      # ---- Komari 面板 ----
+      - KOMARI_ENDPOINT=http://komari.example.com:25774
+      - KOMARI_TOKEN=your-node-token  # 节点 Token（非自动发现令牌）
+      - REPORT_INTERVAL=3
+      - BASIC_INTERVAL=300
+      - MONTH_ROTATE=1                 # 每月1号流量清零，0=不重置
+      - STATE_FILE=/data/traffic_state.json
+    volumes:
+      - ./data:/data                   # 持久化月流量基线
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
